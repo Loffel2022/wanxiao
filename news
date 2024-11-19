@@ -1,0 +1,65 @@
+import folium
+import pandas as pd
+import geopandas as gpd
+
+# Load the world boundaries GeoJSON
+world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+# List of countries to highlight based on recent news events
+highlighted_countries = [
+    "Brazil", "Azerbaijan", "Lebanon", "North Korea", "Ukraine", "China",
+    "Netherlands", "Cuba", "Haiti", "Ecuador"
+]
+
+# Filter the GeoDataFrame to include only the highlighted countries
+highlighted_gdf = world[world['name'].isin(highlighted_countries)]
+
+# Sample data of recent news events
+data = pd.DataFrame({
+    'Event': [
+        "G20 Summit in Rio de Janeiro",
+        "第29届气候变化大会在巴库举行",
+        "Israeli Airstrikes in Lebanon",
+        "North Korea-Russia Defense Treaty",
+        "U.S. Authorizes Long-Range Missiles for Ukraine",
+        "China Criticizes U.S. Over 'Tech War'",
+        "Unrest in Amsterdam",
+        "Earthquake in Cuba",
+        "FAA Bans U.S. Flights to Haiti",
+        "Violence in Ecuadorian Prison"
+    ],
+    'Description': [
+        "G20 leaders gathered to discations debated financial commitments for climate action during the COP29 talks.uss global economic issues, focusing on climate change and international trade.",
+        "气候变化大会是世界上最重要的气候变化会议，由联合国领导。今年第 29 届会议于 11 月 11 日至 22 日举行。会议在位于俄罗斯和伊朗之间的中亚国家阿塞拜疆的首都巴库举行。",
+        "Israeli airstrikes in Beirut resulted in significant casualties.",
+        "North Korea ratified a major defense treaty with Russia, enhancing military cooperation.",
+        "The U.S. authorized Ukraine to use long-range missiles for strikes within Russia.",
+        "Chinese media accused the U.S. of initiating a 'tech war' amid global economic tensions.",
+        "Police detained pro-Palestinian protesters during a banned demonstration in Amsterdam.",
+        "A 6.8 magnitude earthquake struck off the eastern coast of Cuba.",
+        "The FAA prohibited U.S. airlines from operating flights to Haiti after planes were struck by gunfire.",
+        "Clashes between inmates in a Guayaquil prison led to multiple deaths and injuries."
+    ],
+    'Latitude': [-22.9068, 40.4093, 33.8938, 39.0392, 50.4501, 39.9042, 52.3676, 20.0208, 18.5944, -2.1709],
+    'Longitude': [-43.1729, 49.8671, 35.5018, 125.7625, 30.5234, 116.4074, 4.9041, -75.8302, -72.3074, -79.9224]
+})
+
+# Initialize map
+m = folium.Map(location=[0, 0], zoom_start=2)
+
+# Add highlighted countries as a GeoJSON layer
+folium.GeoJson(
+    data=highlighted_gdf,
+    style_function=lambda x: {'fillColor': 'pink', 'color': 'yellow', 'weight': 1, 'fillOpacity': 0.5}
+).add_to(m)
+
+# Add markers for each event
+for i, row in data.iterrows():
+    folium.Marker(
+        location=[row['Latitude'], row['Longitude']],
+        popup=folium.Popup(f"<strong>{row['Event']}</strong><br>{row['Description']}", max_width=300),
+        tooltip=row['Event']
+    ).add_to(m)
+
+# Save the map to an HTML file
+m.save("global_news_map_highlighted.html")
